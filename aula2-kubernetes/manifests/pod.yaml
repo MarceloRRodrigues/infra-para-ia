@@ -12,7 +12,7 @@ metadata:
   name: sentiment-api
   labels:
     app: sentiment-api      # é esta label que o Service procura (service.yaml)
-    dupla: SUBSTITUA
+    dupla: Marcelo_Rodrigues
 spec:
   containers:
     - name: api
