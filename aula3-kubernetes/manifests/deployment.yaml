@@ -13,11 +13,12 @@ kind: Deployment
 metadata:
   name: sentiment-api
 spec:
-  replicas: 3                     # o número que o ReplicaSet persegue para sempre
+  replicas: 4                     # o número que o ReplicaSet persegue para sempre
 
   selector:                       # como o Deployment reconhece os pods que são dele;
     matchLabels:                  # precisa bater com template.metadata.labels
-      app: sentiment-api
+      dupla: Marcelo_Rodrigues 
+      turma: 2026-2
 
   strategy:
     type: RollingUpdate           # troca pod a pod (a alternativa, Recreate, derruba tudo)
@@ -28,11 +29,12 @@ spec:
   template:                       # daqui para baixo é o pod.yaml da Aula 2, embutido
     metadata:
       labels:
-        app: sentiment-api        # todo pod nasce com esta label: é o que o Service procura
+        dupla: Marcelo_Rodrigues        # todo pod nasce com esta label: é o que o Service procura
+        turma: 2026-2
     spec:
       containers:
         - name: api               # o nome usado no kubectl set image ... api=...
-          image: ghcr.io/rodolfo-s-antunes/sentiment-api:v2
+          image: ghcr.io/rodolfo-s-antunes/sentiment-api:v3
           ports:
             - containerPort: 8000
 
@@ -48,14 +50,14 @@ spec:
             httpGet:
               path: /health
               port: 8000
-            initialDelaySeconds: 5    # carência para o modelo carregar
-            periodSeconds: 5          # pergunta a cada 5 s
-            failureThreshold: 3       # 3 falhas seguidas: sai dos endpoints do Service
+            initialDelaySeconds: 8    # 5 -> 8. Mais tempo para a inicialização do pod reduz as chances de falha.
+            periodSeconds: 3          # 5 -> 3. Pergunta a cada 3 s, uma verificação mais rápida para falhas e recuperações.
+            failureThreshold: 2       # 3 -> 2. Com apenas 2 falhas, um pod será removido dos endpoints. 3 falhas são demais, 1 falha é pouco.
 
           livenessProbe:          # "ainda está vivo?"
             httpGet:
               path: /health
               port: 8000
-            initialDelaySeconds: 15   # mais tolerante que a readiness, de propósito
-            periodSeconds: 10
-            failureThreshold: 3       # 3 falhas seguidas: o container é reiniciado
+            initialDelaySeconds: 25   # 15 -> 25. Mais tempo para inicialização, visto que uma falha detectada erroneamente reiniciará todo o container desnecessariamente.
+            periodSeconds: 8 #10 - > 8. Identificará erros mais rapidamente.
+            failureThreshold: 4       # 3 -> 4. Compensa o periodSeconds menor e e evita que pequenas instabilidades provoquem reinicializações desnecessárias.
